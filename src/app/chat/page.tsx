@@ -9,6 +9,9 @@ import { httpRequest } from "@/lib/interceptor";
 import axios, { AxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
 import { v4 as idGen } from "uuid";
+import Slider from "@mui/material/Slider";
+import Box from "@mui/material/Box";
+import * as React from "react";
 
 type Message = {
   id: string;
@@ -22,6 +25,7 @@ export default function Chat() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [temperature, setTemperature] = useState<number>(0.4);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -58,6 +62,7 @@ export default function Chat() {
     httpRequest
       .post("/api/chat", {
         message: t,
+        temperature,
       })
       .then(({ data }) => {
         setMessages((prev) => [
@@ -129,10 +134,34 @@ export default function Chat() {
             Send
           </Button>
         </div>
-        <span className="mx-auto mb-6 text-xs mt-3 text-center">
-          ChatGPT may produce inaccurate information about people, places, or
-          facts.
-        </span>
+        <Box sx={{ display: "flex", flex: 1, justifyContent: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flex: 1,
+              flexDirection: "column",
+              maxWidth: "700px",
+              paddingX: 2,
+              paddingY: 2,
+            }}
+          >
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              temperature (creativity)
+            </Box>
+            <Slider
+              aria-label="Small steps"
+              value={temperature}
+              onChange={(event: Event, newValue: number | number[]) =>
+                !Array.isArray(newValue) && setTemperature(newValue)
+              }
+              step={0.1}
+              marks
+              min={0.1}
+              max={2.0}
+              valueLabelDisplay="auto"
+            />
+          </Box>
+        </Box>
       </div>
     </div>
   );

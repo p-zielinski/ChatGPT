@@ -7,9 +7,7 @@ import { z } from "zod";
 
 const editSchema = z
   .object({
-    username: z.string(),
     apiKey: z.string(),
-    avatar: z.string(),
   })
   .partial()
   .strict();
@@ -17,7 +15,7 @@ const editSchema = z
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { apiKey, avatar, username } = editSchema.parse(body);
+    const { apiKey } = editSchema.parse(body);
     const token = req.cookies.get("accessToken")!.value!;
     const { userId } = decryptToken(token, process.env.JWT_SECRET!);
     const obj = { ...body };
@@ -44,23 +42,23 @@ export async function PUT(req: NextRequest) {
     }
     const refreshTokenPrevious = req.cookies.get("refreshToken")!.value!;
 
-    const findToken = await prisma.token.findFirst({
+    const findToken = await prisma.refreshToken.findFirst({
       where: {
-        token: refreshTokenPrevious,
+        value: refreshTokenPrevious,
       },
     });
-    await prisma.token.delete({
+    await prisma.refreshToken.delete({
       where: { id: findToken!.id },
     });
 
-    const payload: JWTPayload = { userId, apiKey };
+    const payload: JWTPayload = { userId };
     const accessToken = sign(payload, process.env.JWT_SECRET!, {
       expiresIn: "50m",
     });
     const refreshToken = sign(payload, process.env.JWT_REFRESH_SECRET!);
-    await prisma.token.create({
+    await prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        value: refreshToken,
       },
     });
     return new Response(JSON.stringify(userCopy), {

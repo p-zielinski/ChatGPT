@@ -55,7 +55,7 @@ export default function Login() {
           <form>
             <div className="grid w-full items-center gap-4 mt-1">
               <div className="flex flex-col gap-3  space-y-1.5">
-                <Label htmlFor="email">Email or username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   required
                   value={inputs.input}

@@ -32,7 +32,7 @@ export default function Signup() {
   function handleSignup() {
     const { email, apiKey, avatar, username, password } = inputs;
     axios
-      .post("/api/auth/signup", { email, apiKey, avatar, username, password })
+      .post("/api/auth/signup", { email, apiKey, password })
       .then(({ data }) => {
         localStorage.setItem("user", JSON.stringify(data));
         push("/chat");
@@ -49,7 +49,7 @@ export default function Signup() {
   return (
     <div className="flex flex-col items-center h-screen">
       <span className="mt-12">{Logo}</span>
-      <Card className="w-[380px] py-5 mt-20 max-[900px]:mt-10 max-[400px]:w-[95%]">
+      <Card className="w-[380px] py-5 mt-48 max-[900px]:mt-10 max-[400px]:w-[95%]">
         <CardHeader>
           <CardTitle>New to ChatGPT</CardTitle>
           <CardDescription>Create your account.</CardDescription>
@@ -66,31 +66,6 @@ export default function Signup() {
                   }
                   id="email"
                   placeholder="john.doe@example.com"
-                />
-              </div>
-              <div className="flex flex-col gap-3  space-y-1.5">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  value={inputs.username}
-                  onChange={(e) =>
-                    setInputs((prev) => ({ ...prev, username: e.target.value }))
-                  }
-                  id="username"
-                  placeholder="johndoe"
-                />
-              </div>
-              <div className="flex flex-col gap-3  space-y-1.5">
-                <Label htmlFor="avatar">
-                  Avatar URL
-                  <span className="text-neutral-400">(optional)</span>
-                </Label>
-                <Input
-                  value={inputs.avatar}
-                  onChange={(e) =>
-                    setInputs((prev) => ({ ...prev, avatar: e.target.value }))
-                  }
-                  id="avatar"
-                  placeholder="https://github.com/johndoe.png"
                 />
               </div>
               <div className="flex flex-col gap-3  space-y-1.5">
@@ -123,8 +98,7 @@ export default function Signup() {
             disabled={
               !inputs.apiKey ||
               !inputs.email ||
-              !inputs.password ||
-              !inputs.username
+              !inputs.password
             }
             onClick={handleSignup}
             variant="custom"

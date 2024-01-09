@@ -9,22 +9,19 @@ import ServerError, { JWTPayload } from "@/lib/types";
 const signupSchema = z
   .object({
     email: z.string().email(),
-    username: z.string().min(6).max(12),
-    password: z.string().min(8).max(16),
+    password: z.string().min(8).max(60),
     apiKey: z.string(),
-    avatar: z.string().optional(),
   })
   .strict();
 
 export async function POST(req: NextRequest) {
   try {
-    const { apiKey, email, password, username, avatar } = signupSchema.parse(
+    const { apiKey, email, password } = signupSchema.parse(
       await req.json()
     );
-    let user = await prisma.user.findUnique({
+    let user = await prisma.user.findFirst({
       where: {
         email,
-        username,
       },
     });
     if (user) throw new ServerError("User already exist", 409);
@@ -33,21 +30,20 @@ export async function POST(req: NextRequest) {
         apiKey,
         email,
         password: hashSync(password, 10),
-        username,
-        avatar,
       },
     });
-    const payload: JWTPayload = { userId: user.id, apiKey: user.apiKey };
+    const payload: JWTPayload = { userId: user.id };
     const accessToken = sign(payload, process.env.JWT_SECRET!, {
       expiresIn: "50m",
     });
     const refreshToken = sign(
-      { id: user.id, apiKey: user.apiKey },
+        payload,
       process.env.JWT_REFRESH_SECRET!
     );
-    await prisma.token.create({
+    await prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        value: refreshToken,
+        userId: user.id
       },
     });
     return new Response(JSON.stringify(user), {

@@ -2,20 +2,27 @@ import { prisma } from "@/db/config";
 import { decryptToken, errorHandler, getOpenAIApiInstance } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import ServerError from "@/lib/types";
 
 const messageSchema = z.object({
   message: z.string(),
+  temperature: z.number(),
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const { message } = messageSchema.parse(await req.json());
+    const { message, temperature } = messageSchema.parse(await req.json());
     const token = req.cookies.get("accessToken")!.value!;
-    const { apiKey, userId } = decryptToken(token, process.env.JWT_SECRET!);
-    const chatgpt = getOpenAIApiInstance(apiKey);
+    if (!token) throw new ServerError("Token not provided", 409);
+    const { userId } = decryptToken(token, process.env.JWT_SECRET!);
+    if (!userId) throw new ServerError("Invalid token provided", 409);
+    const user = await prisma.user.findFirst({ where: { id: userId } });
+    if (!user) throw new ServerError("User does not exists", 409);
+    const chatgpt = getOpenAIApiInstance(user.apiKey);
     const chat_completion = await chatgpt.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [{ role: "user", content: message }],
+      temperature,
     });
 
     await prisma.query.createMany({
@@ -36,8 +43,6 @@ export async function POST(req: NextRequest) {
       message: chat_completion.data.choices[0].message?.content ?? "",
     });
   } catch (err) {
-    console.log(err);
-
     return errorHandler(err);
   }
 }

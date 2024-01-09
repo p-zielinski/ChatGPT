@@ -71,3 +71,17 @@ export function parseCode(str: string) {
     codesArr: getCodesFromString(str),
   };
 }
+
+
+export const removeKeyInObject = (e: any, keys: string[]) => {
+  if (!!e && typeof e === 'object')
+    for (const f of Object.keys(e)) {
+      if (typeof e[f] === 'object') {
+        removeKeyInObject(e[f], keys);
+      }
+      if (keys.includes(f)) {
+        delete e[f];
+      }
+    }
+  return e;
+};
